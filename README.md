@@ -7,6 +7,9 @@ Setting "Home point" & "Distance limit":
   Click on drop-down triangle next to the GreaseMonkey Icon
   "User Scripts Commands"...
   
+![effect]("blob/master/2018-06-03_133329.jpg")
+![set distance]("blob/master/2018-06-03_133131.jpg")
+
   I'm looking for job right now, 
 	my name is "Zemin Zhu", 28 year old, live in "Hangzhou",
 	education is "elementary school", TRUE
