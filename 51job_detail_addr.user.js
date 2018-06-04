@@ -9,6 +9,7 @@
 // @grant         GM_registerMenuCommand
 // @grant         GM_setValue
 // @grant         GM_getValue
+// @grant         GM_addStyle
 // ==/UserScript==
 
 /*Require: Firefox 45
@@ -51,7 +52,7 @@ let cssContent = `
 		}
 	`
 //modified	addr column weight	
-addGlobalStyle(cssContent);
+GM_addStyle(cssContent);
 //homepoint
 const HOMEPOINT = GM_getValue("homepoint");
 //limit distance from home
