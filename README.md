@@ -17,6 +17,10 @@ Chrome version not work completely because Chrome banned "cross origin request".
 ![effect](https://github.com/zhuzemin/51job_filter_addr/raw/master/2018-06-03_133329.jpg)
 ![set distance](https://github.com/zhuzemin/51job_filter_addr/raw/master/2018-06-03_133131.jpg)
 
+If you want give me some reward for my work, you can pay me by "Paypal", click the link below.
+
+[Paypal](http://htmlpreview.github.io/?https://github.com/zhuzemin/51job_filter_addr/blob/master/paypalreceipt.html)
+
   I'm looking for job right now, 
 
 	my name is "Zemin Zhu", 29 year old, live in "Hangzhou",
