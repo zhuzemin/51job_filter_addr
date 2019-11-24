@@ -1,34 +1,27 @@
 ﻿// ==UserScript==
-// @name       	51job filter addr
-// @namespace   https://github.com/zhuzemin/51job_filter_addr
-// @author      Zemin Zhu
-// @description filter 51job search result by distance
-// @include     https://search.51job.com/*
-// @version     0.0.1
+// @name       	51job search filter with distance
+// @namespace   https://github.com/zhuzemin
+// @description 51job搜索结果以距离过滤
+// @author      zhuzemin
+// @include     https://search.51job.com/list/*
+// @version     1.0
 // @grant       GM_xmlhttpRequest
-// @grant         GM_registerMenuCommand
+// @grant       GM_registerMenuCommand
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @grant         GM_addStyle
 // ==/UserScript==
 
-/*Require: Firefox 45
+/*
+Require: 
+	Firefox <=56
+	Greasemonky <=3.x
 Setting "Home point" & "Distance limit":
-  Click on drop-down triangle next to the GreaseMonkey Icon
-  "User Scripts Commands"...*/
+	Coordinate from Baidu map: https://api.map.baidu.com/lbsapi/getpoint/index.html
+	Click on drop-down triangle next to the Greasemonkey Icon
+	"User Scripts Commands"...
+*/
   
-/*  I'm looking for job right now, 
-	my name is "Zemin Zhu", 28 year old, live in "Hangzhou",
-	education is "elementary school", TRUE
-	work experiense include: "primary mechanic", "vehicle supercharge tunner",
-	skill little "Japanese", and "Programing",and "Autocad/Solidworks"
-	most my "personal work" is about "hacker industry": 
-	like massive login, burute account,
-	and reverse few android app.
-	if you got job or work for me ,please send email to me.
-													694611825@qq.com
-															2018-6-3*/
-	
 "use strict";
 
 // prepare UserPrefs
