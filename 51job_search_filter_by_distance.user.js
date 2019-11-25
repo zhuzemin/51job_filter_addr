@@ -1,20 +1,22 @@
 ﻿// ==UserScript==
-// @name       	51job detail addr
-// @namespace   https://search.51job.com/
-// @author      Zemin Zhu
-// @description 51job搜索显详址
-// @include     https://search.51job.com/*
-// @version     0.0.1
-// @grant       GM_xmlhttpRequest
+// @name       	51job search filter with distance
+// @namespace   https://github.com/zhuzemin
+// @description 51job搜索结果以距离过滤
+// @author      zhuzemin
+// @include     https://search.51job.com/list/*
+// @version     1.1
+// @grant         GM_xmlhttpRequest
 // @grant         GM_registerMenuCommand
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @grant         GM_addStyle
 // ==/UserScript==
-//var location=window.content.document.getElementsByClassName("t3")[0];
-//var region=window.content.document.querySelector("span.t3");
-//location.innerHTML="here";
-//var address=window.content.document.querySelector("a.icon_b.i_map");
+
+/*
+Setting "Home point" & "Distance limit":
+	Coordinate from Baidu map: https://api.map.baidu.com/lbsapi/getpoint/index.html
+*/
+  
 "use strict";
   // setting User Preferences
   function setUserPref(varName, defaultVal, menuText, promtText, sep){
@@ -73,7 +75,7 @@ class Baidu{
 		this.charset='text/plain;charset=utf8';
 	}
 }
-var resultList=window.content.document.querySelector("#resultList");
+var resultList=document.querySelector("#resultList");
 var divs=resultList.querySelectorAll("div.el");
 for (var i = 1; i < divs.length; ++i){
 	(function(div){
@@ -91,7 +93,9 @@ GM_xmlhttpRequest({
 	overrideMimeType:job51.charset, 
   	//synchronous: true
 	onload: function(responseDetails) {
-	var 	[lat,lng]=detail_addr(	responseDetails,div);
+	var a=detail_addr(	responseDetails,div);
+	var lat=a[0];
+	var lng=a[1];
 	//	console.log(lat);
 if(ORIGINP!="0"||ORIGINP!=""){
 		(function(){
@@ -143,7 +147,7 @@ function filter(ret,div,resultList){
 		}
 }
 function createElementFromHTML(htmlString) {
-  var div = window.content.document.createElement('div');
+  var div = document.createElement('div');
   div.innerHTML = htmlString.trim();
 
   // Change this to div.childNodes to support multiple top-level nodes
