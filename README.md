@@ -1,5 +1,12 @@
 # 51job search filter with distance
 
+Compatibility:
+Firefox/Chrome,
+Greasemonkey/Tampermonkey
+
+
+https://greasyfork.org/en/scripts/392868-51job-search-filter-with-distance
+
 Setting "Home point" & "Distance limit":
 	Coordinate from Baidu map: https://api.map.baidu.com/lbsapi/getpoint/index.html
  
