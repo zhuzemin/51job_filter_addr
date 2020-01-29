@@ -4,12 +4,14 @@
 // @description 51job搜索结果以距离过滤
 // @author      zhuzemin
 // @include     https://search.51job.com/list/*
-// @version     1.1
+// @version     1.2
 // @grant         GM_xmlhttpRequest
 // @grant         GM_registerMenuCommand
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @grant         GM_addStyle
+// @connect-src api.map.baidu.com
+// @connect-src search.51job.com
 // ==/UserScript==
 
 /*
