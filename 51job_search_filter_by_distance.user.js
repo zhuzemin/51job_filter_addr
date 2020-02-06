@@ -1,7 +1,9 @@
 ﻿// ==UserScript==
-// @name       	51job search filter with distance
+// @name:zh-CN        	51job search filter with distance
+// @name        	51job search filter with distance
 // @namespace   https://github.com/zhuzemin
-// @description 51job搜索结果以距离过滤
+// @description:zh-CN  51job搜索结果以距离过滤
+// @description  51job搜索结果以距离过滤
 // @author      zhuzemin
 // @include     https://search.51job.com/list/*
 // @version     1.2
