@@ -46,7 +46,7 @@ Setting "Home point" & "Distance limit":
   'homepoint',
   '0',
   'Set Home point',
-  `Set "home point" with "Baidu Map" point". Example: "39.122174, 117.215491"`,	  
+  `Set "home point" with "Baidu Map" point". Example: "39.122174, 117.215491"*longitude before`,	  
   ','
   );
   
@@ -54,7 +54,7 @@ Setting "Home point" & "Distance limit":
   'distance',
   '6000',
   'Set Distance',
-  'Set the distance for how far from home.'
+  'Set the distance for how far from home(meter).'
   );
 
 	var cssContent= `	
