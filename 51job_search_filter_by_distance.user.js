@@ -6,167 +6,275 @@
 // @description  51job搜索结果以距离过滤
 // @author      zhuzemin
 // @include     https://search.51job.com/list/*
-// @version     1.2
+// @version     1.3
 // @grant         GM_xmlhttpRequest
 // @grant         GM_registerMenuCommand
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @grant         GM_addStyle
 // @connect-src api.map.baidu.com
-// @connect-src search.51job.com
+// @connect-src jobs.51job.com
+// @run-at      document-end
 // ==/UserScript==
 
-/*
-Setting "Home point" & "Distance limit":
-	Coordinate from Baidu map: https://api.map.baidu.com/lbsapi/getpoint/index.html
-*/
-  
-"use strict";
-  // setting User Preferences
-  function setUserPref(varName, defaultVal, menuText, promtText, sep){
-    GM_registerMenuCommand(menuText, function() {
-      var val = prompt(promtText, GM_getValue(varName, defaultVal));
-      if (val === null)  { return; }  // end execution if clicked CANCEL
-      // prepare string of variables separated by the separator
-      if (sep && val){
-        var pat1 = new RegExp('\\s*' + sep + '+\\s*', 'g'); // trim space/s around separator & trim repeated separator
-        var pat2 = new RegExp('(?:^' + sep + '+|' + sep + '+$)', 'g'); // trim starting & trailing separator
-        //val = val.replace(pat1, sep).replace(pat2, '');
-      }
-      //val = val.replace(/\s{2,}/g, ' ').trim();    // remove multiple spaces and trim
-      GM_setValue(varName, val);
-      // Apply changes (immediately if there are no existing highlights, or upon reload to clear the old ones)
-      //if(!document.body.querySelector(".THmo")) THmo_doHighlight(document.body);
-      //else location.reload();
-    });
-  }
-  
-  // prepare UserPrefs
-  setUserPref(
-  'homepoint',
-  '0',
-  'Set Home point',
-  `Set "home point" with "Baidu Map" point". Example: "39.122174, 117.215491"*longitude before`,	  
-  ','
-  );
-  
-  setUserPref(
-  'distance',
-  '6000',
-  'Set Distance',
-  'Set the distance for how far from home(meter).'
-  );
-
-	var cssContent= `	
-.dw_table .t3{
-	width:200px
-}
-`
-GM_addStyle(cssContent);
-const ORIGINP=GM_getValue("homepoint");
-const LIMIT=GM_getValue("distance");
-class Job51{
-	constructor(jobid){
-		this.url='https://search.51job.com/jobsearch/bmap/map.php?jobid='+jobid;
-		this.jobid=jobid;
-		this.charset='text/plain;charset=gbk';
-	}
-}
-class Baidu{
-	constructor(originP,lat,lng){
-		this.ak="RGBBNuGoAcxvzl02ibOAxGZM";
-		this.url=`https://api.map.baidu.com/direction/v2/riding?origin=${originP}&destination=${lat},${lng}&ak=${this.ak}`;
-		this.charset='text/plain;charset=utf8';
-	}
-}
-var resultList=document.querySelector("#resultList");
-var divs=resultList.querySelectorAll("div.el");
-for (var i = 1; i < divs.length; ++i){
-	(function(div){
-	var jobid=div.querySelector("input.checkbox").getAttribute("value");
-	//console.log(riding);
-	let job51=new Job51(jobid);
-GM_xmlhttpRequest({
-	method: 'GET',
-	url: job51.url,
-	headers: {
-		'User-agent': 'Mozilla/4.0 (compatible) Greasemonkey',
-		'Accept':	'application/atom+xml,application/xml,text/xml',
-		'Referer': 'https://search.51job.com/jobsearch/bmap/map.php?jobid=102801929',
-	},
-	overrideMimeType:job51.charset, 
-  	//synchronous: true
-	onload: function(responseDetails) {
-	var a=detail_addr(	responseDetails,div);
-	var lat=a[0];
-	var lng=a[1];
-	//	console.log(lat);
-if(ORIGINP!="0"||ORIGINP!=""){
-		(function(){
-		let baidu=new Baidu(ORIGINP,lat,lng);
-GM_xmlhttpRequest({
-	method: 'GET',
-	url: baidu.url,
-	headers: {
-		'User-agent': 'Mozilla/4.0 (compatible) Greasemonkey',
-		'Accept':	'application/atom+xml,application/xml,text/xml',
-		'Referer': 'https://search.51job.com/jobsearch/bmap/map.php?jobid=102801929',
-	},
-	overrideMimeType:baidu.charset, 
-  	//synchronous: true
-	onload: function(responseDetails) {
-	try{
-		filter(	responseDetails,div,resultList);
-	}
-	catch(err){
-		console.log(err);
-		//continue;
-	}
-	}
-});
-})();
-
-}
-	}
-});
-})(divs[i]);
-}
-function detail_addr(ret,div){
-	var g_company=JSON.parse(ret.responseText.match(/\{.*\}/)[0].replace(/([\'\"])?([a-zA-Z0-9_]+)([\'\"])?:/g, '"$2": '));
-	var address=g_company.address;
-	var lat=g_company.lat;
-	var lng=g_company.lng;
-	var region=div.querySelector("span.t3");
-	//region.width="300px";
-	region.textContent=address;
-	return [lat,lng]
-}
-function filter(ret,div,resultList){
-		let riding=JSON.parse(ret.responseText);
-//	console.log(riding);
-		let distance=parseInt(riding.result.routes[0].distance);
-		//console.log(distance);
-		if(distance>LIMIT&&distance<100000){
-			resultList.removeChild(div);
+let config = {
+	'debug': false,
+	'origin': GM_getValue('origin').replace(/\s/, '') || null,
+	'origin_list': [],
+	'max_distence': GM_getValue('max_distence') || 12000,
+	'max_joblist': GM_getValue('max_joblist') || 10,
+	'joblist': [],
+	'button': null,
+	'running': false,
+	'api': {
+		'baidu': {
+			'url': `https://api.map.baidu.com/direction/v2/riding?origin={{origin}}&destination={{lat}},{{lng}}&ak={{ak}}`,
+			'ak': [
+				"RGBBNuGoAcxvzl02ibOAxGZM",
+				'xop0xOYgFxbts1hZhT8YAS2o4BoKfDZp'
+			],
+			'getpoint': 'https://api.map.baidu.com/lbsapi/getpoint/index.html'
+		},
+		'51job': {
+			'url': 'https://search.51job.com/jobsearch/bmap/map.php?jobid={{jobid}}'
 		}
+	},
 }
-function createElementFromHTML(htmlString) {
-  var div = document.createElement('div');
-  div.innerHTML = htmlString.trim();
+let debug = config.debug ? console.log.bind(console) : function () {
+};
+debug(config.max_distence);
+debug(config.max_joblist);
 
-  // Change this to div.childNodes to support multiple top-level nodes
-  return div.firstChild; 
-}
-function addGlobalStyle(css) {
-	var head, style;
-	head = document.getElementsByTagName('head')[0];
-	if (!head) { return; }
-  
-	style = document.createElement('style');
-	style.type = 'text/css';
-	style.innerHTML = css;
-	head.appendChild(style);
-}
-	
+// prepare UserPrefs
+setUserPref(
+	'origin',
+	config.origin,
+	'设置家的坐标',
+	`
+(经度, 纬度), Example: "117.215491, 39.122174";
+多个坐标, 以";"分隔;
+*坐标来自百度地图: `+ config.api.baidu.getpoint
+	,
+);
 
-				
+setUserPref(
+	'max_distence',
+	config.max_distence,
+	'设置距离上限',
+	'骑行距离, 单位(米)'
+);
+
+setUserPref(
+	'max_joblist',
+	config.max_joblist,
+	'搜索结果上限',
+	'搜索结果上限'
+);
+
+class requestObject {
+	constructor(url) {
+		this.method = 'GET';
+		this.respType = 'text';
+		this.url = url;
+		this.body = null;
+		this.headers = {
+			'User-agent': window.navigator.userAgent,
+			'Referer': window.location.href,
+		};
+		this.mimeType = 'text/html;charset=utf8';
+	}
+}
+
+async function init() {
+	debug(config.origin);
+	if (config.origin != null) {
+		for (let origin of config.origin.split(';')) {
+			let lat, lng;
+			for (let item of origin.split(',')) {
+				if (item.length == 9) {
+					lat = item;
+				}
+				else {
+					lng = item;
+				}
+
+			}
+			config.origin_list.push({
+				'lat': lat,
+				'lng': lng
+			});
+		}
+		debug(JSON.stringify(config.origin_list));
+		config.button = document.createElement('button');;
+		config.button.textContent = '按距离筛选';
+		config.button.className = 'p_but';
+		config.button.style.width = '100px';
+		config.button.addEventListener('click', () => {
+
+			config.joblist = [];
+			config.running = true;
+			filter();
+		});
+		document.querySelector('div.j_tlc').appendChild(config.button);
+	}
+
+}
+window.addEventListener('DOMContentLoaded', init);
+
+async function filter() {
+	debug('filter');
+	if (config.running) {
+		config.button.textContent = "搜索中...";
+		setTimeout(async () => {
+
+			let j_joblist = document.querySelector("div.j_joblist");
+			for (let item of j_joblist.childNodes) {
+				let jobid = item.querySelector('input[name="delivery_jobid"').getAttribute('value');
+				let url = config.api['51job'].url.replace('{{jobid}}', jobid);
+				debug(url);
+				let obj = new requestObject(url);
+				obj.mimeType = 'text/html;charset=gb2312';
+				await httpRequest(obj).then(async (resp) => {
+					let dom = new DOMParser().parseFromString(resp.response, 'text/html');
+					let script = dom.querySelector('script');
+					debug(script.textContent);
+					eval(script.textContent);
+					let suc = false;
+					for (let origin of config.origin_list) {
+						if (g_company.lat > 0 && Math.abs(origin.lat - g_company.lat) <= 1 && Math.abs(origin.lng - g_company.lng) <= 1) {
+
+							let rnd = Math.floor(Math.random() * config.api.baidu.ak.length);
+							url = config.api.baidu.url.replace('{{ak}}', config.api.baidu.ak[rnd]);
+							url = url.replace('{{origin}}', origin.lat + ',' + origin.lng);
+							url = url.replace('{{lat}}', g_company.lat);
+							url = url.replace('{{lng}}', g_company.lng);
+							debug(url);
+							obj = new requestObject(url);
+							obj.respType = 'json';
+							await httpRequest(obj).then((resp) => {
+								if (resp.status == 200) {
+
+									//0=ok
+									if (resp.response.status == 0) {
+										let distance = resp.response.result.routes[0].distance;
+										debug(distance);
+										if (distance > config.max_distence) {
+											debug('jobid: ' + jobid + '; too far');
+										}
+										else {
+											debug('jobid: ' + jobid + '; distance: ' + distance);
+											config.joblist.push(item);
+											suc = true;
+										}
+
+									}
+									else {
+
+										debug('jobid: ' + jobid + '; status error: ' + JSON.stringify(resp.response) + '; finalUrl: ' + resp.finalUrl);
+									}
+								}
+							});
+							if (suc) {
+								debug('distance confort');
+								break;
+							}
+						}
+						else {
+							debug(g_company.name);
+						}
+
+					}
+					if (!suc) {
+						item.style.display = "none";
+					}
+				});
+
+			}
+			let page_num = document.querySelector('div.rt.rt_page');
+			let arr = page_num.textContent.match(/(\d+)\s\/\s(\d+)/);
+			let current = parseInt(arr[1]);
+			let total = parseInt(arr[2]);
+			debug(current + '/' + total);
+			debug('config.joblist: ' + config.joblist.length);
+			debug('config.max_joblist: ' + config.max_joblist);
+			if (config.joblist.length < config.max_joblist && current < total) {
+				debug('config.joblist: ' + config.joblist.length);
+				config.running = true;
+				page_num.querySelector('a.e_icons.i_next').click();
+				await filter();
+			}
+			else {
+				for (let item of config.joblist) {
+					let jobid = item.querySelector('input[name="delivery_jobid"').getAttribute('value');
+					for (let node of j_joblist.childNodes) {
+						let node_jobid = node.querySelector('input[name="delivery_jobid"').getAttribute('value');
+						if (jobid == node_jobid) {
+
+							break;
+						}
+						else if (node == j_joblist.lastChild) {
+
+							j_joblist.appendChild(item);
+						}
+					}
+				}
+				debug('suc');
+				config.button.textContent = "按距离筛选";
+				config.running = false;
+			}
+		}, 1000);
+
+	}
+}
+
+/**
+ * Create a user setting prompt
+ * @param {string} varName
+ * @param {any} defaultVal
+ * @param {string} menuText
+ * @param {string} promtText
+ * @param {function} func
+ */
+function setUserPref(varName, defaultVal, menuText, promtText, func = null) {
+	GM_registerMenuCommand(menuText, function () {
+		var val = prompt(promtText, GM_getValue(varName, defaultVal));
+		if (val === null) { return; }// end execution if clicked CANCEL
+		GM_setValue(varName, val);
+		if (func != null) {
+			func(val);
+		}
+	});
+}
+function httpRequest(object, timeout = 10000) {
+	return new Promise(
+		(resolve, reject) => {
+			GM_xmlhttpRequest({
+				method: object.method,
+				url: object.url,
+				headers: object.headers,
+				responseType: object.respType,
+				overrideMimeType: object.mimeType,
+				data: object.body,
+				timeout: timeout,
+				onload: function (responseDetails) {
+					debug(responseDetails);
+					//Dowork
+					resolve(responseDetails);
+				},
+				ontimeout: function (responseDetails) {
+					debug(responseDetails);
+					//Dowork
+					resolve(responseDetails);
+
+				},
+				ononerror: function (responseDetails) {
+					debug(responseDetails);
+					//Dowork
+					resolve(responseDetails);
+
+				}
+			});
+		}
+	)
+}
+

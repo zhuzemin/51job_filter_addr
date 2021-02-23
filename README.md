@@ -2,15 +2,6 @@
 
 Compatibility:
 Firefox/Chrome,
-Greasemonkey/Tampermonkey
-
-
-https://greasyfork.org/en/scripts/392868-51job-search-filter-with-distance
-
-Usage:
-Set "Home point" and "Distance limit":
-Coordinate from Baidu map: https://api.map.baidu.com/lbsapi/getpoint/index.html
-*Longitude before.
+Tampermonkey <--- !!!Attention: Greasemonkey 4 was not support!
  
-![effect](https://github.com/zhuzemin/51job_filter_addr/raw/master/2018-06-03_133329.jpg)
-![set distance](https://github.com/zhuzemin/51job_filter_addr/raw/master/2018-06-03_133131.jpg)
+![](https://github.com/zhuzemin/51job_filter_addr/raw/master/Firefox_Screenshot_2021-02-23T22-28-30.523Z)
